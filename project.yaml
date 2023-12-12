@@ -1,0 +1,10 @@
+api_version: apps/v1
+kind: deployment
+metadata:
+ name: deploy
+ env: devops
+spec:
+ selector:
+  match_labels:
+   app: my-app
+ replica: 2
