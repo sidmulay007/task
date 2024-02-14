@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    environment {
+        TERRAFORM_HOME = tool 'Terraform'
+        GOOGLE_CREDENTIALS = credentials('mention google service account credentialsID')
+        EMAIL_RECIPIENT = "(enter your email)"
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git credentialID: (mention ID), url: (menton URL of gitrepo)
+                echo 'git checkout done'
+            }
+        }
+        stage('Terraform Init') {
+            steps {
+                    sh "${TERRAFORM_HOME}/terraform init"
+                }
+            }
+        }
+        stage('Terraform Plan') {
+            steps {
+                    withCredentials([file(credentialsId: ('mention google service account credentialsID')
+                        sh "${TERRAFORM_HOME}/terraform plan"
+                }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                    withCredentials([file(credentialsId: 'your-google-service-account-credentials-id'
+                        sh "${TERRAFORM_HOME}/terraform apply -auto-approve"
+                }
+        }
+ post {
+        success {
+            // (Notification on success)
+            emailext attachLog: true, body: "Deployment successful", subject: "Jenkins Pipeline - Deployment Success", to: "$EMAIL_RECIPIENT"
+            slackSend(color: 'success', message: 'Deployment successful')
+        }
+
+        failure {
+            // Notification on failure
+            emailext attachLog: true, body: "Deployment failed. Check Jenkins logs for details.", subject: "Jenkins Pipeline - Deployment Failure", to: "$EMAIL_RECIPIENT"
+            slackSend(color: 'danger', message: 'Deployment failed')
+        }
+    }
+}
