@@ -1,0 +1,45 @@
+provider "google" {
+  project     = "(mention projectID)"
+  region      = "(mention region)"
+}
+
+resource "google_container_cluster" "(gke)" {
+  name     = "(mention name)"
+  location = "(mention region)"
+
+  node_pool {
+    name       = "(mention name)"
+    machine_type = "(mention machine typen)"  # Adjust the machine type as per yoru requirement
+
+    node_count = 2
+    autoscaling {
+      enabled = true
+
+      min_node_count = 2
+      max_node_count = 4  # Adjust the maximum number of nodes as per your requiremnt
+    }
+  }
+
+resource "kubernetes_horizontal_pod_autoscaler" "(mention name)" {
+  metadata {
+    name      = "(mention name)"
+    namespace = "(create new or enter default namespace)"
+  }
+
+  spec {
+    max_replicas = 5  # Adjust the maximum number of replicas as per your requiremnt
+    min_replicas = 1
+    scale_target_ref {
+      kind = "Deployment"
+      name = "(mention name)"
+    }
+
+    metric {
+      type = "Resource"
+      resource {
+        name = "cpu"
+        target_average_utilization = 70
+      }
+    }
+  }
+}
