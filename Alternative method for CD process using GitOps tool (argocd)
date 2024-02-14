@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+    environment {
+        GKE_NAMESPACE = '(mention gke namespace)'
+        GIT_REVISION = 'master'
+        ARGOCD_CLI = tool 'argocd-cli'
+        APPLICATION_NAME = '(mention application name)'
+        ARGOCD_SERVER = '(mention argocd server url)'
+        GIT_REPO = '(mention git repo url)'
+        GKE_CLUSTER_NAME = '(mention gke cluster name)'
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git credentialID: (mention ID), url: (menton URL of gitrepo where minifist files are present)
+                echo 'git checkout done'
+            }
+        }
+        stage('Deploy to GKE using ArgoCD') {
+            steps {
+                    sh "curl -O /opt/argocd https://github.com/argoproj/argo-cd/releases/download/v2.1.5/argocd-linux-amd64"
+                    sh "chmod +x /tmp/argocd"
+                    tool name: 'argocd-cli', installations: [
+                        [name: 'default', home: '/opt/argocd']
+                    ]
+                    sh "${ARGOCD_CLI} login ${ARGOCD_SERVER} --insecure --username (mention username) --password (mention password)"
+                    // Update ArgoCd
+                    sh "${ARGOCD_CLI} app create ${APPLICATION_NAME} --repo ${GIT_REPO} --path . --dest-server (mention server) --dest-namespace ${GKE_NAMESPACE} --revision ${GIT_REVISION} --sync-policy automated"
+                    // Syncing the application
+                    sh "${ARGOCD_CLI} app sync ${APPLICATION_NAME}"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Application deployment successful'
+        }
+        failure {
+            echo 'Application deployment failed'
+        }
+    }
